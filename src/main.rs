@@ -109,10 +109,9 @@ impl Agora {
             AgoraMessage::ConversationAdded(conversation) => {
 
                 // *self = Conversations::
-                let old_conversations = self.conversations.clone();
-                let old_conversations = old_conversations.push(conversation);
+                let mut old_conversations = self.conversations.clone();
+                old_conversations.push(conversation);
                 let new_conversation = old_conversations;
-                self.conversations = Vec{..new_conversation};
             }
             AgoraMessage::NameChanged(name) => {
                 self.name = name
@@ -121,7 +120,7 @@ impl Agora {
                 self.desc = desc
             }
         }
-    // }
+    }
 }
 
 impl Conversation {
@@ -171,5 +170,5 @@ impl User {
 // }
 
 pub fn main() {
-    Conversus::run(Settings::default())
+    print!("Hey!");
 }
