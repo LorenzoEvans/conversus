@@ -6,8 +6,21 @@ use iced::{
 };
 use uuid::Uuid;
 
+// Tasks:
+    // Add new fn's to each structure implementation
+        // Comment - done
+        // Panelist/Wayfarer - don't need
+        // User
+        // Conversation - done
+        // Agora - done
+    // Add updater functions to each structure implementation
+        // Comment - done
+        // User
+        // Conversation - done
+        // Agora - done
+    // Develop basic view for Conversus
 
-// impl Default for Conversus {}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Comment {
     content: String,
@@ -49,16 +62,7 @@ impl Default for Wayfarer {
 }
 
 
-#[derive(Debug, Clone, Default)]
-pub struct User {
-    pub kind: String,
-    pub user_name: String,
-    pub email: String,
-    pub password: String,
-    pub conversations: Vec<Conversation>,
-    pub comments: Vec<String>
 
-}
 #[derive(Debug, Clone)]
 pub struct Agora {
     pub name: String,
@@ -80,23 +84,6 @@ pub enum AgoraMessage {
     DescChanged(String),
 }
 
-#[derive(Debug, Clone)]
-pub enum UserMessage {
-    KindChange(String),
-    UserNameChange(String),
-    EmailChange(String),
-    PasswordChange(String),
-    EnteredConversation(User),
-    ExitedConversation(String),
-    AddedComment(Comment),
-    RemovedComment(String)
-}
-#[derive(Debug, Clone)]
-pub enum Message {
-    AgoraMessage,
-    UserMessage,
-    ConversationMessage
-}
 impl Agora {
     pub fn new (
         name: String, 
@@ -173,6 +160,27 @@ impl Conversation {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct User {
+    pub kind: String,
+    pub user_name: String,
+    pub email: String,
+    pub password: String,
+    pub conversations: Vec<Conversation>,
+    pub comments: Vec<String>
+
+}
+#[derive(Debug, Clone)]
+pub enum UserMessage {
+    KindChange(String),
+    UserNameChange(String),
+    EmailChange(String),
+    PasswordChange(String),
+    EnteredConversation(User),
+    ExitedConversation(String),
+    AddedComment(Comment),
+    RemovedComment(String)
+}
 
 impl User {
     fn new(kind: String, user_name: String, password: String, email: String, conversations: Vec<Conversation>, comments: Vec<String>) -> User
@@ -186,10 +194,33 @@ impl User {
                 comments
             }
         }
-
+    fn update(&mut self, message: UserMessage {
+        match message {
+            UserMessage::KindChange(new_kind) => {
+                self.kind = new_kind
+            }
+            UserMessage::UserNameChange(username) => {
+                self.user_name = username
+            }
+            UserMessage::EmailChange(e_mail) => {
+                self.email = e_mail
+            }
+            UserMessage::PasswordChange(new_pw) => {
+                // we should use the uuid hashes here, no plaintext!s
+                self.password = new_pw
+            }
+        }
+    }
 }
 
+
 #[derive(Debug, Clone)]
+pub enum Message {
+    AgoraMessage,
+    UserMessage,
+    ConversationMessage
+}
+
 pub struct Conversus {
     agoras: Vec<Agora>,
     users: Vec<User>
