@@ -10,12 +10,12 @@ use uuid::Uuid;
     // Add new fn's to each structure implementation
         // Comment - done
         // Panelist/Wayfarer - don't need
-        // User
+        // User - done
         // Conversation - done
         // Agora - done
     // Add updater functions to each structure implementation
         // Comment - done
-        // User
+        // User - done
         // Conversation - done
         // Agora - done
     // Develop basic view for Conversus
@@ -149,29 +149,32 @@ impl Conversation {
                 let mut new_comments = self.comments.clone();
                 let new_comment = Comment {content: comment, id: Uuid::new_v4()};
                 new_comments.push(new_comment);
-                self.comments = new_comments
+                self.comments = new_comments;
             }
             ConversationMessage::CommentDeleted(uuid) => {
+
                 let length = self.comments.len();
                 let comments = self.comments.clone();
+
                 for mut i in comments {
+
                     if  i.id == uuid {
-                        i.content = String::from("This comment was deleted.")
+
+                        i.content = String::from("This comment was deleted.");
                     }
                 }
             }
             ConversationMessage::UserAdded(user) => {
+
                 let mut new_assembly = self.assembly.clone();
                 new_assembly.push(user)
+                
             }
             ConversationMessage::UserExited(u_uuid) => {
-                let length = self.assembly.len();
-                let mut new_assembly = self.assembly.clone();
-                for i in 0..length {
-                    if new_assembly[i].uuid == u_uuid { // add uid to user
 
-                    }
-                }
+                let mut new_assembly = self.assembly.clone();
+                new_assembly.retain(|user| user.user_id != u_uuid);
+
             }
         }
     }
@@ -194,8 +197,6 @@ pub enum UserMessage {
     UserNameChange(String),
     EmailChange(String),
     PasswordChange(String),
-    AddedComment(Comment),
-    RemovedComment(String)
 }
 
 impl User {
