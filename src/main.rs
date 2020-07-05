@@ -1,6 +1,6 @@
 
 use iced::{
-    button, scrollable, text_input, Align, Application, Button, Checkbox,
+    button, scrollable, text_input, Align, Button, Checkbox,
     Column, Command, Container, Element, Font, HorizontalAlignment, Length,
     Row, Scrollable, Settings, Text, TextInput, Sandbox
 };
@@ -245,30 +245,37 @@ pub enum Message {
     UserMessage,
     ConversationMessage
 }
-
+#[derive(Debug, Default)]
 pub struct Conversus {
     agoras: Vec<Agora>,
-    users: Vec<User>
+    users: Vec<User>,
+    title: String,
 }
-// impl Sandbox for Conversus {
-//     type Message = Message;
+impl Sandbox for Conversus {
+    type Message = Message;
 
-//     fn new() -> Self {
-//         Self::default()
-//     }
-//     fn title(&self) -> String {
-//         String::from("Conversus")
-//     }
+    fn new() -> Self {
+        Self::default()
+    }
+    fn title(&self) -> String {
+        String::from("Conversus")
+    }
 
-//      fn update(&mut self, message: Message) {
-//          match message {
-//              Message:: AgoraMessage => match agora_message {
-//                  if let Some(Agoram)
-//              }
-//          }
-//      }
-// }
+     fn update(&mut self, message: Message) {
+        ()
+     }
+
+     fn view(&mut self) -> Element<Message> {
+         Column::new()
+            .padding(20)
+            .align_items(Align::Center)
+            .push(
+                Text::new(&self.title.to_string()).size(50)
+            )
+            .into()
+     }
+}
 
 pub fn main() {
-    print!("Hey!");
+    Conversus::run(Settings::default())
 }
