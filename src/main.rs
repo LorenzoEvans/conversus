@@ -121,21 +121,25 @@ impl Agora {
 pub enum ConversationMessage {
     CommentAdded(String),
     CommentDeleted(Uuid),
+    UserAdded(User),
+    UserExited(Uuid)
 }
 
 #[derive(Debug, Clone)]
 pub struct Conversation {
     pub assembly: Vec<User>,
     pub presenter: User,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
+    pub convo_id: Uuid
 }
 
 impl Conversation {
-    fn new(assembly: Vec<User>, presenter: User, comments: Vec<Comment>) -> Conversation {
+    fn new(assembly: Vec<User>, presenter: User, comments: Vec<Comment>, convo_id: Uuid) -> Conversation {
         Conversation {
             assembly,
             presenter,
             comments,
+            convo_id
         }
     }
 
@@ -156,6 +160,19 @@ impl Conversation {
                     }
                 }
             }
+            ConversationMessage::UserAdded(user) => {
+                let mut new_assembly = self.assembly.clone();
+                new_assembly.push(user)
+            }
+            ConversationMessage::UserExited(u_uuid) => {
+                let length = self.assembly.len();
+                let mut new_assembly = self.assembly.clone();
+                for i in 0..length {
+                    if new_assembly[i].uuid == u_uuid { // add uid to user
+
+                    }
+                }
+            }
         }
     }
 }
@@ -167,7 +184,8 @@ pub struct User {
     pub email: String,
     pub password: String,
     pub conversations: Vec<Conversation>,
-    pub comments: Vec<String>
+    pub comments: Vec<String>,
+    pub user_id: Uuid
 
 }
 #[derive(Debug, Clone)]
@@ -176,14 +194,19 @@ pub enum UserMessage {
     UserNameChange(String),
     EmailChange(String),
     PasswordChange(String),
-    EnteredConversation(User),
-    ExitedConversation(String),
     AddedComment(Comment),
     RemovedComment(String)
 }
 
 impl User {
-    fn new(kind: String, user_name: String, password: String, email: String, conversations: Vec<Conversation>, comments: Vec<String>) -> User
+    fn new(
+        kind: String, 
+        user_name: String,
+        password: String, 
+        email: String, 
+        conversations: Vec<Conversation>, 
+        comments: Vec<String>, 
+        user_id: Uuid) -> User
         {
             User {
                 kind,
@@ -191,10 +214,11 @@ impl User {
                 password,
                 email,
                 conversations,
-                comments
+                comments,
+                user_id
             }
         }
-    fn update(&mut self, message: UserMessage {
+    fn update(&mut self, message: UserMessage) {
         match message {
             UserMessage::KindChange(new_kind) => {
                 self.kind = new_kind
