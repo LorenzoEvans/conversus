@@ -67,7 +67,7 @@ impl Default for Wayfarer {
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Agora {
     pub name: String,
     pub topic: String,
@@ -81,11 +81,11 @@ pub struct Agora {
     // incrementing each comment per conversation works, but only if
     // we don't allow threading (or we can treat nested threads like new conversations!)
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AgoraMessage {
     ConversationAdded(Conversation),
-    NameChanged(String),
-    DescChanged(String),
+    NameChanged(String, Uuid),
+    DescChanged(String, Uuid),
 }
 
 impl Agora {
@@ -111,17 +111,18 @@ impl Agora {
                 new_conversations.push(conversation);
                 self.conversations = new_conversations;
             }
-            AgoraMessage::NameChanged(name) => {
+            AgoraMessage::NameChanged(name, uuid) => {
+                    // use uuid to target specific agoras
                 self.name = name
             }
-            AgoraMessage::DescChanged(desc) => {
+            AgoraMessage::DescChanged(desc, uuid) => {
                 self.desc = desc
             }
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConversationMessage {
     CommentAdded(String),
     CommentDeleted(Uuid),
@@ -129,21 +130,21 @@ pub enum ConversationMessage {
     UserExited(Uuid)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Conversation {
     pub assembly: Vec<User>, // Stateful
     pub presenter: User,
     pub comments: Vec<Comment>, // Stateful
-    pub convo_id: Uuid
+    pub agora_id: Uuid
 }
 
 impl Conversation {
-    fn new(assembly: Vec<User>, presenter: User, comments: Vec<Comment>, convo_id: Uuid) -> Conversation {
+    fn new(assembly: Vec<User>, presenter: User, comments: Vec<Comment>, agora_id: Uuid) -> Conversation {
         Conversation {
             assembly,
             presenter,
             comments,
-            convo_id
+            agora_id
         }
     }
 
@@ -184,7 +185,7 @@ impl Conversation {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct User {
     pub kind: String,
     pub user_name: String,
@@ -195,7 +196,7 @@ pub struct User {
     pub user_id: Uuid
 
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum UserMessage {
     KindChange(String),
     UserNameChange(String),
@@ -235,7 +236,7 @@ impl User {
                 self.email = e_mail
             }
             UserMessage::PasswordChange(new_pw) => {
-                // we should use the uuid hashes here, no plaintext!s
+                // we should use the uuid hashes or hash fn here, no plaintext!
                 self.password = new_pw
             }
         }
@@ -243,13 +244,14 @@ impl User {
 }
 
 
-#[derive(Debug, Clone)]
-pub enum Message {
-    AgoraMessage,
-    UserMessage,
-    ConversationMessage
-}
+// #[derive(Debug, Clone, PartialEq)]
+// pub enum Message {
+//     AgoraMessage{ kind: AgoraMessage},
+//     UserMessage(UserMessage),
+//     ConversationMessage(ConversationMessage)
+// }
 #[derive(Debug, Default)]
+
 pub struct Conversus {
     agoras: Vec<Agora>, // Stateful
     users: Vec<User>, // Stateful
@@ -258,33 +260,46 @@ pub struct Conversus {
 impl Application for Conversus {
     type Executor = iced::executor::Default;
     type Flags =();
-    type Message = Message;
+    type Message = AgoraMessage;
 
-    fn new(flags: ()) -> (Self, Command<Message>) {
+    fn new(flags: ()) -> (Self, Command<AgoraMessage>) {
         (Self::default(), Command::none())
     }
     fn title(&self) -> String {
         String::from("Conversus")
     }
 
-     fn update(&mut self, message: Message) -> Command<Message> {
+     fn update(&mut self, message: AgoraMessage) -> Command<AgoraMessage> {
         match message {
-            Message::AgoraMessage => {
-                // do agora things here
+            AgoraMessage::ConversationAdded(Conversation { assembly, presenter, comments, agora_id}) => {
+            Command::none()
+            }
+            AgoraMessage::DescChanged(desc, uuid) => {
                 Command::none()
             }
-            Message::UserMessage => {
-                // do user things here
+            AgoraMessage::NameChanged(name, uuid) => {
                 Command::none()
             }
-            Message::ConversationMessage => {
-                // do convo things here
-                Command::none()
-            }
+            // Message::UserMessage => {
+            //     // do user things here
+            //     Command::none()
+            // }
+            // Message::ConversationMessage => {
+            //     // do convo things here
+            //     Command::none()
+            // }
+            // Message::AgoraMessage::NameChanged(name) => {
+            //     // do agora things here
+            //     Command::none()
+            // }
+            // Message::AgoraMessage::DescChanged(desc) => {
+            //     // do agora things here
+            //     Command::none()
+            // }
         }
      }
 
-     fn view(&mut self) -> Element<Message> {
+     fn view(&mut self) -> Element<AgoraMessage> {
                 Column::new()
             .padding(20)
             .align_items(Align::Center)
