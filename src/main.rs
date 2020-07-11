@@ -2,11 +2,15 @@
 use iced::{
     button, scrollable, text_input, Align, Button, Checkbox,
     Column, Command, Container, Element, Font, HorizontalAlignment, Length,
-    Row, Scrollable, Settings, Text, TextInput, Sandbox
+    Row, Scrollable, Settings, Text, TextInput, Sandbox, Application
 };
 use uuid::Uuid;
 
+
+
 // Tasks:
+    // Write updater function for entire app-
+        // Probably going to be some nested match arms, since we nested message types.
     // Add new fn's to each structure implementation
         // Comment - done
         // Panelist/Wayfarer - don't need
@@ -68,7 +72,7 @@ pub struct Agora {
     pub name: String,
     pub topic: String,
     pub desc: String,
-    pub conversations: Vec<Conversation>,
+    pub conversations: Vec<Conversation>, // Stateful
     pub founder: User,
 
 }
@@ -127,9 +131,9 @@ pub enum ConversationMessage {
 
 #[derive(Debug, Clone)]
 pub struct Conversation {
-    pub assembly: Vec<User>,
+    pub assembly: Vec<User>, // Stateful
     pub presenter: User,
-    pub comments: Vec<Comment>,
+    pub comments: Vec<Comment>, // Stateful
     pub convo_id: Uuid
 }
 
@@ -186,8 +190,8 @@ pub struct User {
     pub user_name: String,
     pub email: String,
     pub password: String,
-    pub conversations: Vec<Conversation>,
-    pub comments: Vec<String>,
+    pub conversations: Vec<Conversation>, // Stateful
+    pub comments: Vec<String>, // Stateful
     pub user_id: Uuid
 
 }
@@ -205,8 +209,8 @@ impl User {
         user_name: String,
         password: String, 
         email: String, 
-        conversations: Vec<Conversation>, 
-        comments: Vec<String>, 
+        conversations: Vec<Conversation>, // Stateful
+        comments: Vec<String>, // Stateful
         user_id: Uuid) -> User
         {
             User {
@@ -247,31 +251,47 @@ pub enum Message {
 }
 #[derive(Debug, Default)]
 pub struct Conversus {
-    agoras: Vec<Agora>,
-    users: Vec<User>,
+    agoras: Vec<Agora>, // Stateful
+    users: Vec<User>, // Stateful
     title: String,
 }
-impl Sandbox for Conversus {
+impl Application for Conversus {
+    type Executor = iced::executor::Default;
+    type Flags =();
     type Message = Message;
 
-    fn new() -> Self {
-        Self::default()
+    fn new(flags: ()) -> (Self, Command<Message>) {
+        (Self::default(), Command::none())
     }
     fn title(&self) -> String {
         String::from("Conversus")
     }
 
-     fn update(&mut self, message: Message) {
-        ()
+     fn update(&mut self, message: Message) -> Command<Message> {
+        match message {
+            Message::AgoraMessage => {
+                // do agora things here
+                Command::none()
+            }
+            Message::UserMessage => {
+                // do user things here
+                Command::none()
+            }
+            Message::ConversationMessage => {
+                // do convo things here
+                Command::none()
+            }
+        }
      }
 
      fn view(&mut self) -> Element<Message> {
-         Column::new()
+                Column::new()
             .padding(20)
             .align_items(Align::Center)
             .push(
                 Text::new(&self.title.to_string()).size(50)
             )
+            // .push(TextInput::new())
             .into()
      }
 }
