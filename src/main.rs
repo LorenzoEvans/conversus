@@ -22,7 +22,22 @@ use uuid::Uuid;
         // User - done
         // Conversation - done
         // Agora - done
-    // Develop basic view for Conversus
+    // Develop basic view for Conversus - done (we've got a Gui?)
+    // We need to pull stateful fields out into a state struct
+    // so that we can update state centrally from the Agora update function
+    // then we can remove the update functions for sub structures
+    // and just let them read the state they represent
+        // We'll leave the scalar state to the objects that need them,
+        // an give the complex state to the agora perhaps.
+        // however this, then requires the agora to distribute state as instantiations
+        // of objects require it- how is a user object going to keep track of conversations it's
+        // connected to, without any information about conversation state?
+        // We could use a vector of conversation id's (Uuids)
+            // Alright so a User object wants to add a comment to some conversation, we'll say
+            // identifiable by string u_c_convo_title_hash, so the user says to Agora,
+            // hey add this comment to convo u_c_convo_title_hash, and the Agora says, where?
+            // and we say to the end of the list of comments. boom.
+    // We need to do data normalization and define the arity(-ies?) of these relationships
 
 
 #[derive(Debug, Clone, PartialEq)]
@@ -86,6 +101,8 @@ pub enum AgoraMessage {
     ConversationAdded(Conversation),
     NameChanged(String, Uuid),
     DescChanged(String, Uuid),
+    UserMessage(UserMessage),
+    ConversationMessage(ConversationMessage),
 }
 
 impl Agora {
@@ -192,7 +209,6 @@ pub struct User {
     pub email: String,
     pub password: String,
     pub conversations: Vec<Conversation>, // Stateful
-    pub comments: Vec<String>, // Stateful
     pub user_id: Uuid
 
 }
@@ -250,8 +266,14 @@ impl User {
 //     UserMessage(UserMessage),
 //     ConversationMessage(ConversationMessage)
 // }
-#[derive(Debug, Default)]
 
+struct State {
+    pub agoras: Vec<Agora>,
+    pub users: Vec<User>
+    pub conversations: Vec<Conversation>, // Stateful
+    pub comments: Vec<String>, // Stateful
+}
+#[derive(Debug, Default)]
 pub struct Conversus {
     agoras: Vec<Agora>, // Stateful
     users: Vec<User>, // Stateful
@@ -278,6 +300,18 @@ impl Application for Conversus {
                 Command::none()
             }
             AgoraMessage::NameChanged(name, uuid) => {
+                Command::none()
+            }
+            AgoraMessage::UserMessage(UserMessage::EmailChange(email)) => {
+                Command::none()
+            }
+            AgoraMessage::UserMessage(UserMessage::KindChange(kind)) => {
+                Command::none()
+            }
+            AgoraMessage::UserMessage(UserMessage::PasswordChange(pw)) => {
+                Command::none()
+            }
+            AgoraMessage::UserMessage(UserMessage::UserNameChange(username)) => {
                 Command::none()
             }
             // Message::UserMessage => {
