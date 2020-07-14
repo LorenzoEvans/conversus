@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 
 // Tasks:
-    // Write updater function for entire app-
+    // Write updater function for entire app - In Progress
         // Probably going to be some nested match arms, since we nested message types.
     // Add new fn's to each structure implementation
         // Comment - done
@@ -23,7 +23,7 @@ use uuid::Uuid;
         // Conversation - done
         // Agora - done
     // Develop basic view for Conversus - done (we've got a Gui?)
-    // We need to pull stateful fields out into a state struct
+    // We need to pull stateful fields out into a state struct - In Progress
     // so that we can update state centrally from the Agora update function
     // then we can remove the update functions for sub structures
     // and just let them read the state they represent
@@ -32,7 +32,7 @@ use uuid::Uuid;
         // however this, then requires the agora to distribute state as instantiations
         // of objects require it- how is a user object going to keep track of conversations it's
         // connected to, without any information about conversation state?
-        // We could use a vector of conversation id's (Uuids)
+        // We could use a vector of conversation id's (Uuids) - impl'd
             // Alright so a User object wants to add a comment to some conversation, we'll say
             // identifiable by string u_c_convo_title_hash, so the user says to Agora,
             // hey add this comment to convo u_c_convo_title_hash, and the Agora says, where?
@@ -43,20 +43,23 @@ use uuid::Uuid;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Comment {
     content: String,
-    id: Uuid
+    id: Uuid,
+    convo_id: Uuid
 }
 
 impl Comment {
-    fn new(content: String, id: Uuid) -> Comment {
+    fn new(content: String, id: Uuid, convo_id: Uuid) -> Comment {
         Comment {
             content: content,
-            id: id
+            id: id,
+            convo_id
         }
     }
     fn make_comment() -> Comment {
         Comment {
         content: "Awesome".to_string(), 
-        id: Uuid::new_v4()
+        id: Uuid::new_v4(),
+        convo_id: Uuid::new_v4()
         }
     }
 }
@@ -152,16 +155,17 @@ pub struct Conversation {
     pub assembly: Vec<User>, // Stateful
     pub presenter: User,
     pub comments: Vec<Comment>, // Stateful
-    pub agora_id: Uuid
+    pub agora_id: Uuid,
 }
 
 impl Conversation {
-    fn new(assembly: Vec<User>, presenter: User, comments: Vec<Comment>, agora_id: Uuid) -> Conversation {
+    fn new(assembly: Vec<User>, presenter: User, comments: Vec<Comment>, agora_id: Uuid, conversations: Vec<Uuid>) -> Conversation {
         Conversation {
             assembly,
             presenter,
             comments,
-            agora_id
+            agora_id,
+            conversations
         }
     }
 
@@ -208,7 +212,7 @@ pub struct User {
     pub user_name: String,
     pub email: String,
     pub password: String,
-    pub conversations: Vec<Conversation>, // Stateful
+    pub conversations: Vec<Uuid>, // Stateful
     pub user_id: Uuid
 
 }
@@ -260,16 +264,9 @@ impl User {
 }
 
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub enum Message {
-//     AgoraMessage{ kind: AgoraMessage},
-//     UserMessage(UserMessage),
-//     ConversationMessage(ConversationMessage)
-// }
-
 struct State {
     pub agoras: Vec<Agora>,
-    pub users: Vec<User>
+    pub users: Vec<User>,
     pub conversations: Vec<Conversation>, // Stateful
     pub comments: Vec<String>, // Stateful
 }
@@ -293,7 +290,7 @@ impl Application for Conversus {
 
      fn update(&mut self, message: AgoraMessage) -> Command<AgoraMessage> {
         match message {
-            AgoraMessage::ConversationAdded(Conversation { assembly, presenter, comments, agora_id}) => {
+            AgoraMessage::ConversationAdded(Conversation { assembly, presenter, comments, agora_id, convo_id}) => {
             Command::none()
             }
             AgoraMessage::DescChanged(desc, uuid) => {
@@ -312,6 +309,9 @@ impl Application for Conversus {
                 Command::none()
             }
             AgoraMessage::UserMessage(UserMessage::UserNameChange(username)) => {
+                Command::none()
+            }
+            AgoraMessage::ConversationMessage(ConversationMessage::CommentAdded(comment)) => {
                 Command::none()
             }
             // Message::UserMessage => {
