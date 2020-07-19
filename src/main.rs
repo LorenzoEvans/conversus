@@ -78,7 +78,7 @@ impl PersistentState {
             .await
             .map_err(|_| LoadErr::FileErr)?;
         
-            serde_json::from_str(&contents).map_err(|_|, LoadErr::FormatErr)
+            serde_json::from_str(&contents).map_err(|_| LoadErr::FormatErr)
     }
 
     async fn save(self) -> Result<(), SaveErr> {
@@ -118,8 +118,22 @@ enum AgoraMessage {
     DescChanged(String, Uuid),
     UserMessage(UserMessage),
     InputChanged(String),
+    CreateComment,
     ConversationMessage(ConversationMessage),
 }
+
+fn loading_message() -> Element<'static, AgoraMessage> {
+    Container::new(
+        Text::new("Entering The Acropolis...")
+            .horizontal_alignment(HorizontalAlignment::Center)
+            .size(50),
+    )
+    .width(Length::Fill)
+    .height(Length::Fill)
+    .center_y()
+    .into()
+}
+
 
 impl Application for Conversus {
     type Executor = iced::executor::Default;
@@ -200,14 +214,37 @@ impl Application for Conversus {
      }
 
      fn view(&mut self) -> Element<AgoraMessage> {
+
+        match self {
+            Conversus::Loading => loading_message(),
+            Conversus::Loaded(State {
+                scroll,
+                input,
+                input_value,
+                ..
+            }) =>  {
+                let title = Text::new("Conversus")
+                    .width(Length::Fill)
+                    .size(100)
+                    .color([0.5, 0.4, 0.6])
+                    .horizontal_alignment(HorizontalAlignment::Center);
+                let input = TextInput::new(
+                    input,
+                    "...",
+                    input_value,
+                    AgoraMessage::InputChanged,
+                ).padding(15).size(30).on_submit(AgoraMessage::CreateComment);
+                
                 Column::new()
-            .padding(20)
-            .align_items(Align::Center)
-            .push(
+                .padding(20)
+                .align_items(Align::Center)
+                .push(
                 Text::new(&self.title().to_string()).size(50)
-            )
-            // .push(TextInput::new())
-            .into()
+                )
+                // .push(TextInput::new())
+                .into()
+            }
+        }
      }
 }
 
@@ -246,10 +283,28 @@ impl Application for Conversus {
 
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Comment {
+struct Comment {
     content: String,
     id: Uuid,
     convo_id: Uuid
+}
+#[derive(Debug, Clone)]
+pub enum CommentState {
+    Idle {
+        edit_button: button::State,
+    },
+    Editing {
+        text_input: text_input::State,
+        delete_button: button::State,
+    },
+}
+
+impl Default for CommentState {
+    fn default() -> Self {
+        CommentState::Idle {
+            edit_button: button::State::new(),
+        }
+    }
 }
 
 impl Comment {
@@ -351,7 +406,7 @@ pub enum ConversationMessage {
 pub struct Conversation {
     pub assembly: Vec<User>, // Stateful
     pub presenter: User,
-    pub comments: Vec<Comment>, // Stateful
+    comments: Vec<Comment>, // Stateful
     pub agora_id: Uuid,
 }
 
@@ -461,5 +516,13 @@ impl User {
     }
 }
 
+pub struct Controls {
+    edit_button: button::State,
+    delete_button: button::State,
+    login: button::State,
+    logout: button::State,
+}
 
-
+// impl Controls {
+//     fn view(&mut self, )
+// }
