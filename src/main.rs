@@ -52,13 +52,72 @@ enum SaveErr {
     WriteErr,
     FormatErr,
 }
+#[cfg(not(target_arch = "wasm32"))]
+impl PersistentState {
+    fn path() -> std::path::PathBuf {
+        let mut path = if let Some(dirs) = directories::ProjectDirs::from("rs", "Conversus", "Convos")
+            {
+                dirs.data_dir().into()
+            } else {
+                std::env::current_dir().unwrap_or(std::path::PathBuf::new())
+            };
+
+        path.push("convos.json");
+        path
+    }
+
+    async fn load() -> Result<PersistentState, LoadErr> {
+        use async_std::prelude::*;
+
+        let mut contents = String::new();
+
+        let mut file = async_std::fs::File::open(Self::path())
+            .await
+            .map_err(|_| LoadErr::FileErr)?;
+        file.read_to_string(&mut contents)
+            .await
+            .map_err(|_| LoadErr::FileErr)?;
+        
+            serde_json::from_str(&contents).map_err(|_|, LoadErr::FormatErr)
+    }
+
+    async fn save(self) -> Result<(), SaveErr> {
+        use async_std::prelude::*;
+
+        let json = serde_json::to_string_pretty((&self))
+            .map_err(|_| SaveErr::FormatErr)?;
+        let path = Self::path();
+
+        if let Some(dir) = path.parent() {
+            async_std::fs::create_dir_all(dir)
+                .await
+                .map_err(|_| SaveErr::DirErr)?;
+        }
+
+        {
+            let mut file = async_std::fs::File::create(path)
+                .await
+                .map_err(|_| SaveErr::FileErr)?;
+
+            file.write_all(json.as_bytes())
+                .await
+                .map_err(|_| SaveErr::WriteErr)?;
+        }
+
+        async_std::task::sleep(std::time::Duration::from_secs(3)).await;
+
+        Ok(())
+    }
+
+}
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum AgoraMessage {
+enum AgoraMessage {
     Loaded(Result<PersistentState, LoadErr>),
     ConversationAdded(Conversation),
     NameChanged(String, Uuid),
     DescChanged(String, Uuid),
     UserMessage(UserMessage),
+    InputChanged(String),
     ConversationMessage(ConversationMessage),
 }
 
@@ -109,22 +168,9 @@ impl Application for Conversus {
             AgoraMessage::ConversationMessage(ConversationMessage::UserExited(uuid)) => {
                 Command::none()
             }
-            // Message::UserMessage => {
-            //     // do user things here
-            //     Command::none()
-            // }
-            // Message::ConversationMessage => {
-            //     // do convo things here
-            //     Command::none()
-            // }
-            // Message::AgoraMessage::NameChanged(name) => {
-            //     // do agora things here
-            //     Command::none()
-            // }
-            // Message::AgoraMessage::DescChanged(desc) => {
-            //     // do agora things here
-            //     Command::none()
-            // }
+            _ => {
+                Command::none()
+            }
         }
      }
 
