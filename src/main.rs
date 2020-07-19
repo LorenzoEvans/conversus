@@ -16,7 +16,7 @@ enum Conversus {
     Loaded(State)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct State {
     pub agoras: Vec<Agora>,
     scroll: scrollable::State,
@@ -25,14 +25,14 @@ struct State {
     saving: bool,
     pub users: Vec<User>,
     pub conversations: Vec<Conversation>, // Stateful
-    pub comments: Vec<String>, // Stateful
+    pub comments: Vec<Comment>, // Stateful
 }
 // What state from above is going to be saved?
     // Agoras,
     // users,
     // conversations
     // comments
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 struct PersistentState {
     agoras: Vec<Agora>,
     users: Vec<User>,
@@ -134,42 +134,67 @@ impl Application for Conversus {
     }
 
      fn update(&mut self, message: AgoraMessage) -> Command<AgoraMessage> {
-        match message {
-            AgoraMessage::ConversationAdded(Conversation { assembly, presenter, comments, agora_id}) => {
-            Command::none()
-            }
-            AgoraMessage::DescChanged(desc, uuid) => {
+        match self {
+            Conversus::Loading => {
+                match message {
+                    AgoraMessage::Loaded(Ok(state)) => {
+                        *self = Conversus::Loaded(State {
+                            agoras: state.agoras,
+                            users: state.users,
+                            conversations: state.conversations,
+                            comments: state.comments,
+                            input_value: state.input_value,
+                            ..State::default()
+                        });
+                    }
+                    AgoraMessage::Loaded(Err(_)) => {
+                        *self = Conversus::Loaded(State::default());
+                    }
+                    _ => {}
+                }
                 Command::none()
             }
-            AgoraMessage::NameChanged(name, uuid) => {
-                Command::none()
-            }
-            AgoraMessage::UserMessage(UserMessage::EmailChange(email)) => {
-                Command::none()
-            }
-            AgoraMessage::UserMessage(UserMessage::KindChange(kind)) => {
-                Command::none()
-            }
-            AgoraMessage::UserMessage(UserMessage::PasswordChange(pw)) => {
-                Command::none()
-            }
-            AgoraMessage::UserMessage(UserMessage::UserNameChange(username)) => {
-                Command::none()
-            }
-            AgoraMessage::ConversationMessage(ConversationMessage::CommentAdded(comment)) => {
-                Command::none()
-            }
-            AgoraMessage::ConversationMessage(ConversationMessage::CommentDeleted(comment)) => {
-                Command::none()
-            }
-            AgoraMessage::ConversationMessage(ConversationMessage::UserAdded(user)) => {
-                Command::none()
-            }
-            AgoraMessage::ConversationMessage(ConversationMessage::UserExited(uuid)) => {
-                Command::none()
-            }
-            _ => {
-                Command::none()
+            Conversus::Loaded(state) => {
+                let mut saved = false;
+
+                match message {
+                    AgoraMessage::ConversationAdded(Conversation { assembly, presenter, comments, agora_id}) => {
+                    Command::none()
+                    }
+                    AgoraMessage::DescChanged(desc, uuid) => {
+                        Command::none()
+                    }
+                    AgoraMessage::NameChanged(name, uuid) => {
+                        Command::none()
+                    }
+                    AgoraMessage::UserMessage(UserMessage::EmailChange(email)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::UserMessage(UserMessage::KindChange(kind)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::UserMessage(UserMessage::PasswordChange(pw)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::UserMessage(UserMessage::UserNameChange(username)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::ConversationMessage(ConversationMessage::CommentAdded(comment)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::ConversationMessage(ConversationMessage::CommentDeleted(comment)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::ConversationMessage(ConversationMessage::UserAdded(user)) => {
+                        Command::none()
+                    }
+                    AgoraMessage::ConversationMessage(ConversationMessage::UserExited(uuid)) => {
+                        Command::none()
+                    }
+                    _ => {
+                        Command::none()
+                    }
+                }
             }
         }
      }
