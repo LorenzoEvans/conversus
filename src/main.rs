@@ -1,11 +1,43 @@
 
 use iced::{
-    button, scrollable, text_input, Align, Button, Checkbox,
-    Column, Command, Container, Element, Font, HorizontalAlignment, Length,
-    Row, Scrollable, Settings, Text, TextInput, Sandbox, Application
+    button, scrollable, text_input, Align, Button, Checkbox, container,
+    Column, Command, Container, Element, Font, HorizontalAlignment, VerticalAlignment, Length,
+    Row, Scrollable, Settings, Text, TextInput, Sandbox, Application, pane_grid, PaneGrid
 };
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
+
+// Tasks:
+    // Write updater function for entire app - In Progress
+        // Probably going to be some nested match arms, since we nested message types.
+    // Add new fn's to each structure implementation
+        // Comment - done
+        // Panelist/Wayfarer - don't need
+        // User - done
+        // Conversation - done
+        // Agora - done
+    // Add updater functions to each structure implementation
+        // Comment - done
+        // User - done
+        // Conversation - done
+        // Agora - done
+    // Develop basic view for Conversus - done (we've got a Gui?)
+    // We need to pull stateful fields out into a state struct - In Progress
+    // so that we can update state centrally from the Agora update function
+    // then we can remove the update functions for sub structures
+    // and just let them read the state they represent
+        // We'll leave the scalar state to the objects that need them,
+        // an give the complex state to the agora perhaps.
+        // however this, then requires the agora to distribute state as instantiations
+        // of objects require it- how is a user object going to keep track of conversations it's
+        // connected to, without any information about conversation state?
+        // We could use a vector of conversation id's (Uuids) - impl'd
+            // Alright so a User object wants to add a comment to some conversation, we'll say
+            // identifiable by string u_c_convo_title_hash, so the user says to Agora,
+            // hey add this comment to convo u_c_convo_title_hash, and the Agora says, where?
+            // and we say to the end of the list of comments. boom.
+    // We need to do data normalization and define the arity(-ies?) of these relationships
+
 pub fn main() {
     Conversus::run(Settings::default())
 }
@@ -123,14 +155,26 @@ enum AgoraMessage {
 }
 
 fn loading_message() -> Element<'static, AgoraMessage> {
+    let panel = Row::new()
+        .spacing(50)
+        .max_height(400)
+        .push(Text::new("Welcome To Conversus")
+                .size(30)
+                .horizontal_alignment(HorizontalAlignment::Left)
+                .vertical_alignment(VerticalAlignment::Top))
+        .push(Text::new("A place for thoughtful, phototopical discourse.")
+                .horizontal_alignment(HorizontalAlignment::Right)
+                .vertical_alignment(VerticalAlignment::Center));
     Container::new(
-        Text::new("Entering The Acropolis...")
-            .horizontal_alignment(HorizontalAlignment::Center)
-            .size(50),
+        panel,
+        // Text::new("Welcome to Conversus")
+        //     .vertical_alignment(VerticalAlignment::Top)
+        //     .size(30)
+            
     )
     .width(Length::Fill)
-    .height(Length::Fill)
-    .center_y()
+    .align_x(Align::Center)
+    .style(style::Container)
     .into()
 }
 
@@ -526,3 +570,26 @@ pub struct Controls {
 // impl Controls {
 //     fn view(&mut self, )
 // }
+
+mod style {
+
+    use iced::{container, Color, Background};
+
+    pub struct Container;
+
+    const Beige: Color = Color::from_rgb(
+        248.0 / 255.0, 
+        241.0 / 255.0, 
+        241.0 / 255.0 );
+    impl container::StyleSheet for Container {
+        fn style(&self) -> container::Style {
+            container::Style {
+                background: Some(Background::Color(Beige)),
+                border_color: Color::BLACK,
+                border_radius: 0,
+                border_width: 0,
+                text_color: Some(Color::BLACK),
+            }
+        }
+    }
+}
